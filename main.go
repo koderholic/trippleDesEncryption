@@ -39,7 +39,7 @@ func encrypt(plaintext string, key, iv []byte) (string, error) {
 	}
 
 	if len(plaintext)%block.BlockSize() != 0 {
-		plaintextByte = Pad(plaintextByte, block.BlockSize())
+		plaintextByte = PKCS7Pad(plaintextByte, block.BlockSize())
 	}
 
 	mode := cipher.NewCBCEncrypter(block, iv)
@@ -71,19 +71,19 @@ func decrypt(ciphertext string, key, iv []byte ) (string, error) {
 	decrypter := cipher.NewCBCDecrypter(block, iv)
 	decrypted := make([]byte, len(base64Decoded))
 	decrypter.CryptBlocks(decrypted, base64Decoded)
-	decrypted = UnPad(decrypted)
+	decrypted = PKCS7UnPad(decrypted)
 
 	return string(decrypted), nil
 }
 
-func Pad(unpadded []byte, blockSize int) []byte {
+func PKCS7Pad(unpadded []byte, blockSize int) []byte {
 	padding := (blockSize - len(unpadded)%blockSize)
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(unpadded, padtext...)
 }
 
 // Undo removes PKCS7 padding
-func UnPad(padded []byte) []byte {
+func PKCS7UnPad(padded []byte) []byte {
 	length := len(padded)
 	unpadding := int(padded[length-1])
 	return padded[:(length - unpadding)]
